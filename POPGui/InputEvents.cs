@@ -3,8 +3,10 @@ using Microsoft.Xna.Framework.Input;
 
 public enum InputEventType
 {
+    KeyDown,
     KeyPressed,
     KeyReleased,
+    MouseButtonDown,
     MouseButtonPressed,
     MouseButtonReleased,
 }

@@ -4,26 +4,25 @@ using System.Diagnostics;
 
 public class TitleBar : GUIElement
 {
-    private string _title;
+    public string Title;
+    public Color BackgroundColor;
+    public Color TextColor;
     private SpriteFont _font;
-    private Color _textColor;
-    private Color _backgroundColor;
     private bool _isDragging;
     private Point _nextWindowPos;
 
-    public TitleBar(Rectangle bounds, string title, Style style, GraphicsDevice graphicsDevice)
-        : base(bounds, style, graphicsDevice)
+    public TitleBar(int height, string title, Style style, GraphicsDevice graphicsDevice) : base(new Rectangle(0, 0, 0, height), style, graphicsDevice)
     {
-        _title = title;
+        Title = title;
+        TextColor = style.TextColor ?? Color.White;
+        BackgroundColor = style.BackgroundColor ?? Color.Black;
         _font = style.Font;
-        _textColor = style.TextColor ?? Color.White;
-        _backgroundColor = style.BackgroundColor ?? Color.Black;
     }
 
     public override void Update(InputHandler inputHandler, Window window)
     {
         var mousePosition = inputHandler.mousePosition;
-        var titleBarBounds = new Rectangle(window.Bounds.X, window.Bounds.Y, Bounds.Width, Bounds.Height);
+        var titleBarBounds = new Rectangle(window.Bounds.X, window.Bounds.Y, window.Bounds.Width, Bounds.Height);
 
         if (_isDragging)
         {
@@ -36,11 +35,9 @@ public class TitleBar : GUIElement
                 int xPos = mousePosition.X - _nextWindowPos.X;
                 int yPos = mousePosition.Y - _nextWindowPos.Y;
 
-                // Bounds = new Rectangle(mousePosition - _dragOffset, Bounds.Size);
-                // window.MoveTo(new Point(_dragOffset.X - window.Bounds.X, _dragOffset.Y - window.Bounds.Y));
-                Debug.WriteLine("Mouse   >> X: " + mousePosition.X + " | Y: " + mousePosition.Y);
-                Debug.WriteLine("Offset  >> X: " + _nextWindowPos.X + " | Y: " + _nextWindowPos.Y);
-                Debug.WriteLine("NextPos >> X: " + xPos + " | Y: " + yPos);
+                // Debug.WriteLine("Mouse   >> X: " + mousePosition.X + " | Y: " + mousePosition.Y);
+                // Debug.WriteLine("Offset  >> X: " + _nextWindowPos.X + " | Y: " + _nextWindowPos.Y);
+                // Debug.WriteLine("NextPos >> X: " + xPos + " | Y: " + yPos);
                 window.MoveTo(new Point(xPos, yPos));
             }
         }
@@ -64,12 +61,12 @@ public class TitleBar : GUIElement
         int x = window.Bounds.X + Bounds.X;
         int y = window.Bounds.Y + Bounds.Y;
 
-        Rectangle rect = new Rectangle(new Point(x, y), new Point(Bounds.Width, Bounds.Height));
-        spriteBatch.Draw(BackgroundTexture, rect, _backgroundColor);
+        Rectangle rect = new Rectangle(new Point(x, y), new Point(window.Bounds.Width, Bounds.Height));
+        spriteBatch.Draw(BackgroundTexture, rect, BackgroundColor);
 
-        Vector2 textSize = _font.MeasureString(_title);
-        Vector2 textPosition = new Vector2(x + 7, y + 5);
+        Vector2 textSize = _font.MeasureString(Title);
+        Vector2 textPosition = new Vector2(x + 7 , y + (Bounds.Height / 2) - (textSize.Y / 2));
 
-        spriteBatch.DrawString(_font, _title, textPosition, _textColor);
+        spriteBatch.DrawString(_font, Title, textPosition, TextColor);
     }
 }

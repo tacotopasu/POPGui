@@ -6,13 +6,15 @@ using System.Diagnostics;
 
 public class Window
 {
-    private Texture2D _backgroundTexture;
-    private bool _isDragging;
-    private Point _dragOffset;
+    private Texture2D BackgroundTexture;
+    protected Texture2D ColorTexture;
+    protected bool _isDragging;
+    protected Point _dragOffset;
 
-    private List<GUIElement> _elements;
-    private InputHandler _inputHandler;
-    private GraphicsDevice _graphicsDevice;
+    public LayoutManager layoutManager;
+    protected EventHandler _eventHandler;
+    protected InputHandler _inputHandler;
+    protected GraphicsDevice _graphicsDevice;
 
 
     public Rectangle Bounds;
@@ -22,7 +24,7 @@ public class Window
 
     public bool HasTitleBar { get; set; }
 
-    public Window(GraphicsDevice graphicsDevice, InputHandler inputHandler, Point position, string title, Style style)
+    public Window(GraphicsDevice graphicsDevice, EventHandler eventHandler, InputHandler inputHandler, Point position, string title, Style style)
     {
         Style = style;
         Title = title;
@@ -31,35 +33,31 @@ public class Window
 
         Bounds = new Rectangle(position, Style.DefaultSize ?? new Point(150, 150));
 
-        _backgroundTexture = new Texture2D(graphicsDevice, 1, 1);
-        _backgroundTexture.SetData(new Color[] { Style.BackgroundColor ?? Color.DarkGray });
+        BackgroundTexture = new Texture2D(graphicsDevice, 1, 1);
+        ColorTexture = new Texture2D(graphicsDevice, 1, 1);
+        BackgroundTexture.SetData(new Color[] { Style.BackgroundColor ?? Color.White });
+        ColorTexture.SetData(new Color[] { Color.White });
 
         _graphicsDevice = graphicsDevice;
+        _eventHandler = eventHandler;
         _inputHandler = inputHandler;
-        _elements = new List<GUIElement>();
+        layoutManager = new LayoutManager();
     }
 
-    public void Update(InputHandler inputHandler)
+    public virtual void Update(InputHandler inputHandler)
     {
-        HandleUpdates(this);
+        HandleUpdates(inputHandler, this);
     }
 
-    protected virtual void HandleUpdates(Window window)
+    public virtual void Draw(SpriteBatch spriteBatch)
     {
-        // When handling window updates, it's expected that _inputHandler has already been updated this cycle
-        foreach (var element in _elements)
+        // Drawing window background
+        spriteBatch.Draw(BackgroundTexture, Bounds, Style.BackgroundColor ?? Color.Transparent);
+
+        // Drawing elements
+        foreach (var element in layoutManager.Elements)
         {
-            element.Update(_inputHandler, this);
-        }
-    }
-
-    public void Draw(SpriteBatch spriteBatch, Window window)
-    {
-        spriteBatch.Draw(_backgroundTexture, Bounds, Style.BackgroundColor ?? Color.Transparent);
-
-        foreach (var element in _elements)
-        {
-            element.Draw(spriteBatch, window);
+            element.Draw(spriteBatch, this);
         }
     }
 
@@ -69,13 +67,24 @@ public class Window
         Bounds.Y = position.Y;
     }
 
+    protected virtual void HandleUpdates(InputHandler inputHandler, Window window)
+    {
+        // When handling window updates, it's expected that _inputHandler has already been updated this cycle
+        foreach (var element in layoutManager.Elements)
+        {
+            element.Update(inputHandler, this);
+        }
+
+        layoutManager.UpdateLayout();
+    }
+
     protected void AddElement(GUIElement element)
     {
-        _elements.Add(element);
+        layoutManager.AddElement(element);
     }
 
     protected void RemoveElement(GUIElement element)
     {
-        _elements.Remove(element);
+        layoutManager.RemoveElement(element);
     }
 }

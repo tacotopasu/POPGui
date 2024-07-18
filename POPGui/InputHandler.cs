@@ -32,9 +32,13 @@ public class InputHandler
     }
 
     private void CheckKeyboardKeyState
-        (KeyboardState currentState, KeyboardState previousState, Keys key, List<Keys> pressedKeys, List<Keys> releasedKeys)
+        (KeyboardState currentState, KeyboardState previousState, Keys key, List<Keys> pressedKeys, List<Keys> releasedKeys, List<Keys> downKeys)
     {
-        if (currentState.IsKeyDown(key) && previousState.IsKeyUp(key))
+        if (currentState.IsKeyDown(key) && previousState.IsKeyDown(key))
+        {
+            downKeys.Add(key);
+        }
+        else if (currentState.IsKeyDown(key) && previousState.IsKeyUp(key))
         {
             pressedKeys.Add(key);
         }
@@ -48,10 +52,11 @@ public class InputHandler
     {
         List<Keys> pressedKeys = new List<Keys>();
         List<Keys> releasedKeys = new List<Keys>();
+        List<Keys> downKeys = new List<Keys>();
 
         foreach (Keys key in Enum.GetValues(typeof(Keys)))
         {
-            CheckKeyboardKeyState(_currentKeyboardState, _previousKeyboardState, key, pressedKeys, releasedKeys);
+            CheckKeyboardKeyState(_currentKeyboardState, _previousKeyboardState, key, pressedKeys, releasedKeys, downKeys);
         }
 
         if (pressedKeys.Count > 0)
@@ -63,12 +68,21 @@ public class InputHandler
         {
             OnInputEvent?.Invoke(new InputEvent(InputEventType.KeyReleased, releasedKeys));
         }
+
+        if (downKeys.Count > 0)
+        {
+            OnInputEvent?.Invoke(new InputEvent(InputEventType.KeyDown, downKeys));
+        }
     }
 
     private void CheckMouseButtonState
-        (ButtonState currentState, ButtonState previousState, MouseButtons button, List<MouseButtons> pressedButtons, List<MouseButtons> releasedButtons)
+        (ButtonState currentState, ButtonState previousState, MouseButtons button, List<MouseButtons> pressedButtons, List<MouseButtons> releasedButtons, List<MouseButtons> downButtons)
     {
-        if (currentState == ButtonState.Pressed && previousState == ButtonState.Released)
+        if (currentState == ButtonState.Pressed && previousState == ButtonState.Pressed)
+        {
+            downButtons.Add(button);
+        }
+        else if (currentState == ButtonState.Pressed && previousState == ButtonState.Released)
         {
             pressedButtons.Add(button);
         }
@@ -82,12 +96,13 @@ public class InputHandler
     {
         List<MouseButtons> pressedButtons = new List<MouseButtons>();
         List<MouseButtons> releasedButtons = new List<MouseButtons>();
+        List<MouseButtons> downButtons = new List<MouseButtons>();
 
-        CheckMouseButtonState(_currentMouseState.LeftButton, _previousMouseState.LeftButton, MouseButtons.Left, pressedButtons, releasedButtons);
-        CheckMouseButtonState(_currentMouseState.RightButton, _previousMouseState.RightButton, MouseButtons.Right, pressedButtons, releasedButtons);
-        CheckMouseButtonState(_currentMouseState.MiddleButton, _previousMouseState.MiddleButton, MouseButtons.Middle, pressedButtons, releasedButtons);
-        CheckMouseButtonState(_currentMouseState.XButton1, _previousMouseState.XButton1, MouseButtons.XButton1, pressedButtons, releasedButtons);
-        CheckMouseButtonState(_currentMouseState.XButton2, _previousMouseState.XButton2, MouseButtons.XButton2, pressedButtons, releasedButtons);
+        CheckMouseButtonState(_currentMouseState.LeftButton, _previousMouseState.LeftButton, MouseButtons.Left, pressedButtons, releasedButtons, downButtons);
+        CheckMouseButtonState(_currentMouseState.RightButton, _previousMouseState.RightButton, MouseButtons.Right, pressedButtons, releasedButtons, downButtons);
+        CheckMouseButtonState(_currentMouseState.MiddleButton, _previousMouseState.MiddleButton, MouseButtons.Middle, pressedButtons, releasedButtons, downButtons);
+        CheckMouseButtonState(_currentMouseState.XButton1, _previousMouseState.XButton1, MouseButtons.XButton1, pressedButtons, releasedButtons, downButtons);
+        CheckMouseButtonState(_currentMouseState.XButton2, _previousMouseState.XButton2, MouseButtons.XButton2, pressedButtons, releasedButtons, downButtons);
 
         if (pressedButtons.Count > 0)
         {
@@ -97,6 +112,11 @@ public class InputHandler
         if (releasedButtons.Count > 0)
         {
             OnInputEvent?.Invoke(new InputEvent(InputEventType.MouseButtonReleased, null, releasedButtons));
+        }
+
+        if (downButtons.Count > 0)
+        {
+            OnInputEvent?.Invoke(new InputEvent(InputEventType.MouseButtonDown, null, downButtons));
         }
     }
 

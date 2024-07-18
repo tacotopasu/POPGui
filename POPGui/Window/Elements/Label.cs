@@ -3,38 +3,46 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
-public class Header : GUIElement
+public class Label : GUIElement
 {
-    private string _text;
-    private GraphicsDevice _graphicsDevice;
-    private Color _backgroundColor;
-    private SpriteFont _font;
+    public string FormatString { get; set; }
+    public Dictionary<string, object> Values { get; set; }
+    public SpriteFont Font { get; set; }
+    public Color? TextColor { get; set; }
 
-    public Header(int height, string text, Style style, GraphicsDevice graphicsDevice) : base(new Rectangle(0, 0, 0, height), style, graphicsDevice)
+    public Label(int height, string formatString, Style style, GraphicsDevice graphicsDevice)
+        : base(new Rectangle(0, 0, 0, height), style, graphicsDevice)
     {
-        _text = text;
-        _graphicsDevice = graphicsDevice;
-        _backgroundColor = style.BackgroundColor ?? Color.Transparent;
-        _font = style.Font;
+        FormatString = formatString;
+        Font = Style.Font;
+        TextColor = Style.TextColor;
     }
 
     public override void Update(InputHandler inputHandler, Window window)
     {
-        // dumb C#, made me write this empty override to not cause myself more mental anguish...
-        // this is VERY likely due to my lack of experience and not knowing any better :)
     }
 
     public override void Draw(SpriteBatch spriteBatch, Window window)
     {
+        // Get the position of the label relative to the window
         int x = window.Bounds.X + Bounds.X;
         int y = window.Bounds.Y + Bounds.Y;
 
+        string formattedText = FormatString;
+        if (Values != null)
+        {
+            foreach (var kvp in Values)
+            {
+                formattedText = formattedText.Replace($"{{{kvp.Key}}}", kvp.Value?.ToString());
+            }
+        }
+
         string finaloutput;
         int lines;
-        (finaloutput, lines) = WrapText(_font, _text, window.Bounds.Width);
-
-        float lineHeight = _font.MeasureString("A").Y;
+        (finaloutput, lines) = WrapText(Font, formattedText, window.Bounds.Width);
+        float lineHeight = Font.MeasureString("A").Y;
         float totalTextHeight = lineHeight * lines;
 
         if (totalTextHeight > Bounds.Height)
@@ -42,15 +50,17 @@ public class Header : GUIElement
             Rectangle bounds = Bounds;
             bounds.Height = (int)totalTextHeight;
             Bounds = bounds;
+            window.layoutManager.UpdateLayout();
         }
 
+        // Draw background
         Rectangle rect = new Rectangle(x, y, Bounds.Width, Bounds.Height);
-        spriteBatch.Draw(BackgroundTexture, rect, _backgroundColor);
+        spriteBatch.Draw(BackgroundTexture, rect, Style.BackgroundColor ?? Color.Transparent);
 
+        // Draw text
         if (Style.Font != null)
         {
-            Vector2 textPosition = new Vector2(x, y + (Bounds.Height / 2) - (totalTextHeight / 2));
-            Debug.WriteLine($"{finaloutput} | {y}");
+            Vector2 textPosition = new Vector2(x, y);
             spriteBatch.DrawString(Style.Font, finaloutput, textPosition, Style.TextColor ?? Color.White);
         }
     }

@@ -15,6 +15,7 @@ namespace POP
         private EventHandler _eventHandler;
 
         private Window _mainWindow;
+        private Window _infoWindow;
         private SpriteFont _defaultFont;
 
         public Game()
@@ -38,23 +39,39 @@ namespace POP
 
             _defaultFont = Content.Load<SpriteFont>("Fonts\\Default");
 
-            var windowStyle = new Style
+            var mainWindowStyle = new Style
             {
                 Font = _defaultFont,
                 DefaultSize = new Point(200, 250),
-                BackgroundColor = Color.DarkGray,
+                BackgroundColor = Color.Black,
                 TextColor = Color.White
             };
 
-            _mainWindow = new HelloWindow(GraphicsDevice, _inputHandler, new Point(75, 50), "Test Window", windowStyle);
+            var infoWindowStyle = new Style
+            {
+                Font = _defaultFont,
+                DefaultSize = new Point(200, 250),
+                BackgroundColor = Color.Black,
+                TextColor = Color.White
+            };
 
+            _mainWindow = new HelloWindow(GraphicsDevice, _graphics, _eventHandler, _inputHandler, new Point(675, 35), "Debug", mainWindowStyle);
+            _infoWindow = new InfoWindow(GraphicsDevice, _eventHandler, _inputHandler, new Point(35, 625), "Info", infoWindowStyle);
+
+            SetWindowSize(1000, 800);
             base.Initialize();
+        }
+
+        private void SetWindowSize(int width, int height)
+        {
+            _graphics.PreferredBackBufferWidth = width;
+            _graphics.PreferredBackBufferHeight = height;
+            _graphics.ApplyChanges();
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
             _rectangleTexture = FillTexture(25, 25, Color.HotPink);
         }
 
@@ -65,17 +82,19 @@ namespace POP
 
             _inputHandler.Update();
             _mainWindow.Update(_inputHandler);
+            _infoWindow.Update(_inputHandler);
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             _spriteBatch.Begin();
             // _spriteBatch.Draw(_rectangleTexture, new Rectangle(50, 50, 100, 100), Color.White);
-            _mainWindow.Draw(_spriteBatch, _mainWindow);
+            _mainWindow.Draw(_spriteBatch);
+            _infoWindow.Draw(_spriteBatch);
             _spriteBatch.End();
 
             base.Draw(gameTime);
@@ -87,7 +106,9 @@ namespace POP
             int pixelCount = width * height;
             Color[] data = new Color[pixelCount];
 
-            for (int i = 0; i < pixelCount; i++) { data[i] = color; }
+            for (int i = 0; i < pixelCount; i++)
+                data[i] = color;
+
             texture.SetData(data);
 
             return texture;

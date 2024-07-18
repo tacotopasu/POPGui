@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 public class Style
 {
+    private static Style emptyStyle;
     public SpriteFont? Font { get; set; }
     public Point? DefaultSize { get; set; }
     public Color? BackgroundColor { get; set; }
@@ -10,6 +11,8 @@ public class Style
     public Color? TextColor { get; set; }
     public int? Padding { get; set; }
     public int? Margin { get; set; }
+
+    public static Style Empty => emptyStyle;
 
     public Style(SpriteFont? font, Point? defaultSize, Color? backgroundColor, Color? borderColor, Color? textColor, int? padding, int? margin)
     {
